@@ -8,7 +8,7 @@ The code has been tested using the following environment:
 * python 3.7.6
 * numpy 1.18.5
 * torch 1.8.1
-* rdkit 2018.03.4
+* rdkit 2018.03.4 # only this is maintained. Python=3.6, torch=1.8.0, numpy=as required by rdkit
 
 # Examples
 ## Data Preprocessing

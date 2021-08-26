@@ -309,7 +309,8 @@ class Trainer(object):
 
 
 def load_data(args, name):
-    file = open('data/' + args.prefix + '_' + name  + '.pickle', 'rb')
+    # file = open('data/' + args.prefix + '_' + name  + '.pickle', 'rb')
+    file = open('data/' + name  + '_data.pickle', 'rb') #!
     full_data = pickle.load(file)
     file.close()
     full_dataset = TransformerDataset(args.shuffle, full_data)
@@ -318,6 +319,9 @@ def load_data(args, name):
                              batch_size=args.batch_size,
                              shuffle=(name == 'train'),
                              num_workers=args.num_workers, collate_fn = TransformerDataset.collate_fn)
+
+    #! Note...
+    exit()
     return data_loader
 
 
@@ -328,7 +332,22 @@ if __name__ == '__main__':
     lg.setLevel(RDLogger.CRITICAL)
     RDLogger.DisableLog('rdApp.info')
 
-    args = parser.parse_args()
+    # args = parser.parse_args()
+    args = {
+        'seed': 0, 'local_rank': 0, 'name': 'tmp',
+        'save_path': './save', 'world_size': 1, 'train': True, 
+        'prefix': 'inc4', 'num_workers': 8, 
+    }
+
+    class dotdict(dict):
+        """dot.notation access to dictionary attributes"""
+        __getattr__ = dict.get
+        __setattr__ = dict.__setitem__
+        __delattr__ = dict.__delitem__
+
+    args = dotdict(args)
+
+
     seed = args.seed + args.local_rank
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -341,7 +360,7 @@ if __name__ == '__main__':
         os.mkdir(args.save_path)
 
     print(args)
-    dist.init_process_group("nccl", rank=args.local_rank, world_size=args.world_size)
+    # dist.init_process_group("nccl", rank=args.local_rank, world_size=args.world_size) #!
 
     valid_dataloader = None
     train_dataloader = None

@@ -17,7 +17,7 @@ class TransformerDataset(Dataset):
 
         #! just to set the correct data types and torch Tensors..
         for feature_dict in data: #! wasn't it a list of single dictionaries?
-            for key in feature_dict:
+            for key in feature_dict: #! NO, weirdly after unpickling, its a list of dictionaries..
                 tmp = torch.tensor(feature_dict[key])
                 if 'aroma' in key or 'mask' in key:
                     feature_dict[key] = tmp.bool() #! convert these to bool
