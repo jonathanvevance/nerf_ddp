@@ -70,12 +70,32 @@ def molecule(mols, src_len, reactant_mask = None, ranges = None):
 def reaction(args):
     """ processes a reaction, returns dict of arrays"""
     src, tgt = args
+
+    #! Alert
+    print("\n\nSource is....")
+    print(src)
+    print("\n\nTarget is....")
+    print(tgt)
+
     pattern = re.compile(":(\d+)\]") # atom map numbers
     src_len = Chem.MolFromSmiles(src).GetNumAtoms()
+    tgt_len = Chem.MolFromSmiles(tgt).GetNumAtoms() #! I added this... (tgt_len != src_len)
+
+    #! Alert
+    print("\nSource length = ", src_len)
+    print("Target length = ", tgt_len)
 
     # reactant mask
     src_mols = src.split('.')
-    tgt_atoms = pattern.findall(tgt)
+
+    #! Alert
+    print("\n#src_mols = ", len(src_mols))
+
+    tgt_atoms = pattern.findall(tgt) #! Looking for SAME PATTERN AS LHS in RHS.. (look for datasets)
+
+    #! Alert
+    print("\n#tgt_atoms = ", len(tgt_atoms))
+
     reactant_mask = [False for i in src_mols]
     for j, item in enumerate(src_mols):
         atoms = pattern.findall(item)
@@ -135,6 +155,7 @@ def reaction(args):
             item['src_' + key] = src_features[key]
             item['tgt_' + key] = tgt_features[key]
 
+    exit() #! Alert
     return item
 
 
@@ -143,9 +164,15 @@ def process(name):
     src = []
     with open(name + ".txt") as file:
         for i, line in enumerate(file):
+
+            # if i <= 3:
+            #     continue #! Skip first
+
             rxn = line.split()[0].split('>>')
             src.append(rxn[0])
             tgt.append(rxn[1])
+
+            break # only one reaction #! ALert
 
     pool = ProcessPoolExecutor(10)
     dataset = []
@@ -160,6 +187,7 @@ def process(name):
                 dataset += [item]
 
     pool.shutdown()
+    exit()
 
     with open(name +"_"+prefix+ '.pickle', 'wb') as file:
         pickle.dump(dataset, file)
@@ -170,6 +198,6 @@ if __name__ =='__main__':
     lg = RDLogger.logger()
     lg.setLevel(RDLogger.CRITICAL)
     RDLogger.DisableLog('rdApp.info')
-    process("data/valid")
-    process("data/test")
+    # process("data/valid")
+    # process("data/test")
     process("data/train")
