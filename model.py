@@ -106,7 +106,7 @@ class MoleculeDecoder(nn.Module):
 
         charge_logit = self.charge_head(encoder_output)
         CE = nn.CrossEntropyLoss(reduction='none')
-        # assumes [B, C, L] (input, target)        
+        # assumes [B, C, L] (input, target)
         tgt_charge = tgt_charge.long() + 6
         charge_loss = CE(charge_logit, tgt_charge)
         charge_loss = charge_loss * tgt_mask
@@ -168,11 +168,11 @@ class MoleculeVAE(nn.Module):
                 result = self.M_decoder(src, tensors['src_bond'], tensors['src_mask'], posterior,
                                         bond, aroma, charge, tensors['tgt_mask'])
                 result['kl'] = kl
-                result['loss'] = result['pred_loss'] + self.args.beta*kl
+                result['loss'] = result['pred_loss'] + self.args.beta*kl #! beta for disentangled VAE??
             else:
                 result = self.M_decoder(src, tensors['src_mask'], None,
                                         bond, aroma, charge, tensors['tgt_mask'])
-                result['loss'] = result['pred_loss'] 
+                result['loss'] = result['pred_loss']
 
         elif mode is 'sample':
             """ returns bond[B, L, 4], aroma [B, L], charge[B, L], weight [B, L, L]"""

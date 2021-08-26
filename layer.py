@@ -76,6 +76,7 @@ class AtomEncoder(nn.Module):
         self.aroma_embedding = nn.Embedding(2, dim)
         self.reactant_embedding = nn.Embedding(2, dim)
         self.segment_embedding = nn.Embedding(30, dim)
+        #! nn.Embedding(A, B) = lookup dictionary for A things of B dims.
         self.rank = rank
         self.mlp = MLP(dim)
 
@@ -123,12 +124,13 @@ class AtomEncoder(nn.Module):
         tmp = tmp*(1-eye) # remove self loops
         message = torch.einsum("lbd,bkl->kbd", message, tmp)
 
-        embedding = embedding + message
+        embedding = embedding + message #! Finally... - so this step does not take any edge information
 
         return embedding
 
 
 class BondDecoder(nn.Module):
+    #! this is the class to look for, for the MSE loss on E matrix...
     def __init__(self, dim, rank=0):
         super().__init__()
         self.inc_attention = MultiheadAttention(dim, MAX_DIFF)
@@ -149,6 +151,7 @@ class BondDecoder(nn.Module):
         l, b, dim = molecule_embedding.shape
         molecule_embedding = molecule_embedding.permute(1, 2, 0)  # to [b, dim, l]
 
+        #! Pointer networks...
         q, k, v = self.inc_q(molecule_embedding), self.inc_k(molecule_embedding), molecule_embedding
         q, k, v = q.permute(2, 0, 1), k.permute(2, 0, 1), v.permute(2, 0, 1)  # to [l, b, c]
         _, inc = self.inc_attention(q, k, v, key_padding_mask=src_mask)
@@ -157,14 +160,22 @@ class BondDecoder(nn.Module):
         q, k, v = q.permute(2, 0, 1), k.permute(2, 0, 1), v.permute(2, 0, 1)  # to [l, b, c]
         _, dec = self.dec_attention(q, k, v, key_padding_mask=src_mask)
 
-        pad_mask = 1 - src_mask.float()
+        pad_mask = 1 - src_mask.float() #! src_mask == N x no_atoms_batch
         # [B, L], 0 if padding
-        pad_mask = torch.einsum("bl,bk->blk", pad_mask, pad_mask)
+
+        pad_mask = torch.einsum("bl,bk->blk", pad_mask, pad_mask) #! Note, outer product...
         diff = (inc - dec)*MAX_DIFF*pad_mask
+
+        #! Recap..
+        #! src_bond == no_atoms x MAX_BONDS matrix with i-th atoms, j-th bonding atom idx..
 
         eye = torch.eye(src_mask.shape[1]).to(self.rank)
         src_weight = torch.index_select(eye, dim=0, index=src_bond.reshape(-1)).view(b, l, MAX_BONDS, l).sum(dim=2)* pad_mask
-        pred_weight = src_weight + diff
+        pred_weight = src_weight + diff #! Predicted E matrix == N x (atoms_in_batch) x (atoms_in_batch)
+
+        #! Note...
+        # print("\n Dim of pred_weight", pred_weight.shape)
+        # print("\n pred_weight = \n", pred_weight)
 
         if tgt_bond is None: # inference
             # [b, l, l]

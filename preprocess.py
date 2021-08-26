@@ -48,19 +48,19 @@ def molecule(mols, src_len, reactant_mask = None, ranges = None):
             for j, b in enumerate(atom.GetBonds()): # mark existence of bond first
 
                 other = b.GetBeginAtomIdx() + b.GetEndAtomIdx() - atom.GetIdx() #! get other atom Idx
-                other = mol.GetAtoms()[other].GetAtomMapNum() - 1 #! atomic number of other atom
+                other = mol.GetAtoms()[other].GetAtomMapNum() - 1 #! atom idx of other atom
                 num_map = {'SINGLE': 1, 'DOUBLE': 2, 'TRIPLE': 3, 'AROMATIC': 1}
                 num = num_map[str(b.GetBondType())] #! int number of bonds (or 1 for aromatic)
                 for k in range(num):
                     if cnt == MAX_BONDS: #! if TOTAL no. of bonds > MAX_BONDS, ignore this reaction (return None)
                         return None
-                    bonds[idx][cnt] = other #! IMPORTANT = for idx atom, bond number 'cnt' is with this atomic number...
+                    bonds[idx][cnt] = other #! IMPORTANT = for idx atom, bond number 'cnt' is with this atom idx...
                     cnt += 1
                 if str(b.GetBondType()) == 'AROMATIC':
                     aroma[idx] = 1
             tmp = bonds[idx][0:cnt]
             tmp.sort()
-            bonds[idx][0:cnt] = tmp #! sort the atomic numbers (for consistency because this is a graph)
+            bonds[idx][0:cnt] = tmp #! sort the atom idxes (for consistency because this is a graph)
             while cnt < MAX_BONDS:
                 bonds[idx][cnt] = idx #! IMPORTANT = for others cnt values till MAX_BONDS, put lone pairs.
                 cnt += 1
@@ -143,9 +143,9 @@ def reaction(args):
     # #! Note...
     # print("\n#src_features.bond = ", src_features["bond"])
     # print("#tgt_features.bond = ", tgt_features["bond"])
-    #! Bond = matrix src_len X MAX_BONDS, showing atomic num of j-th bond of i-th atom.
-    #! The atomic numbers of covalent bond neighbour atoms are sorted and the rest of the
-    #! column elements (after all bonds are done) are lone pairs and self atomic num is filled
+    #! Bond = matrix src_len X MAX_BONDS, showing atom IDX of j-th bond of i-th atom.
+    #! The atom IDXes of covalent bond neighbour atoms are sorted and the rest of the
+    #! column elements (after all bonds are done) are lone pairs and self IDX is filled
 
     if not (src_features and tgt_features):
         return None

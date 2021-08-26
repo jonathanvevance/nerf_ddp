@@ -44,8 +44,8 @@ class Trainer(object):
 
         self.model = MoleculeVAE(args, self.ntoken, args.dim, args.depth).to(self.rank)
 
-
-        self.model = nn.parallel.DistributedDataParallel(self.model, device_ids=[self.rank], find_unused_parameters=True)
+        #! Skip distributed training...
+        # self.model = nn.parallel.DistributedDataParallel(self.model, device_ids=[self.rank], find_unused_parameters=True)
 
         if not self.dataloader_tr is None:
             self._optimizer = optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()),
@@ -333,8 +333,11 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     args = {
         'seed': 0, 'local_rank': 0, 'name': 'tmp',
-        'save_path': './save', 'world_size': 1, 'train': True, 
-        'prefix': 'inc4', 'num_workers': 8, 
+        'save_path': './save', 'world_size': 1, 'train': True,
+        'prefix': 'inc4', 'num_workers': 0, 'vae': True, 'dim': 256,
+        'epochs': 100, 'dropout': 0.1, 'batch_size': 1, 'depth': 6,
+        'lr': 0.0001, 'checkpoint': None, 'save': False, 'eval': True,
+        'test': False, 'beta': 0.01, 'temperature': [1,2,3], #! check correct tempt values
     }
 
     class dotdict(dict):
