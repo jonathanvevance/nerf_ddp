@@ -47,6 +47,8 @@ class TransformerDataset(Dataset):
 
     def collate_fn(data_list):
         # variable lenght batch, minimal padding
+        #! for different reactions, matrices will be of different sizes
+        #! collate_fn simply makes them the same by padding till max_len
         max_len = 0
         for i in data_list:
             if i['element'].shape[0] > max_len:
