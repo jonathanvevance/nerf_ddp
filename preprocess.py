@@ -47,8 +47,6 @@ def molecule(mols, src_len, reactant_mask = None, ranges = None):
             cnt = 0 #! tracks the TOTAL number of bonds from this atom
             for j, b in enumerate(atom.GetBonds()): # mark existence of bond first
 
-                print("bond =", b)
-
                 other = b.GetBeginAtomIdx() + b.GetEndAtomIdx() - atom.GetIdx() #! get other atom Idx
                 other = mol.GetAtoms()[other].GetAtomMapNum() - 1 #! atomic number of other atom
                 num_map = {'SINGLE': 1, 'DOUBLE': 2, 'TRIPLE': 3, 'AROMATIC': 1}
@@ -75,32 +73,32 @@ def reaction(args):
     """ processes a reaction, returns dict of arrays"""
     src, tgt = args
 
-    #! Note...
-    print("\n\nSource is....")
-    print(src)
-    print("\n\nTarget is....")
-    print(tgt)
+    # #! Note...
+    # print("\n\nSource is....")
+    # print(src)
+    # print("\n\nTarget is....")
+    # print(tgt)
 
     pattern = re.compile(":(\d+)\]") # atom map numbers
     src_len = Chem.MolFromSmiles(src).GetNumAtoms()
     tgt_len = Chem.MolFromSmiles(tgt).GetNumAtoms() #! I added this... (tgt_len != src_len)
 
-    #! Note...
-    print("\nSource length = ", src_len)
-    print("Target length = ", tgt_len)
+    # #! Note...
+    # print("\nSource length = ", src_len)
+    # print("Target length = ", tgt_len)
 
     # reactant mask
     src_mols = src.split('.')
 
-    #! Note...
-    print("\n#src_mols = ", len(src_mols))
+    # #! Note...
+    # print("\n#src_mols = ", len(src_mols))
 
     src_atoms = pattern.findall(src) #! I added this.. [this will be from 1 to some max number]
     tgt_atoms = pattern.findall(tgt) #! RHS side SHOULD BE MAPPED..
 
-    #! Note...
-    print("#src_atoms = ", src_atoms)
-    print("#tgt_atoms = ", tgt_atoms) #! len(tgt_atoms) = tgt_len
+    # #! Note...
+    # print("#src_atoms = ", src_atoms)
+    # print("#tgt_atoms = ", tgt_atoms) #! len(tgt_atoms) = tgt_len
 
     reactant_mask = [False for i in src_mols]
     for j, item in enumerate(src_mols):
@@ -110,16 +108,16 @@ def reaction(args):
                 reactant_mask[j] = True
                 break
 
-    #! Note...
-    print("\nreactant_mask = ", reactant_mask) #! reactants that take part in rxn
+    # #! Note...
+    # print("\nreactant_mask = ", reactant_mask) #! reactants that take part in rxn
 
     # the atom map num ranges of each molecule for segment mask
     src_mols = [Chem.MolFromSmiles(item) for item in src_mols]
     tgt_mols = [Chem.MolFromSmiles(item) for item in tgt.split(".")]
 
-    #! Note...
-    print("\n#src_mols = ", len(src_mols))
-    print("#tgt_mols = ", len(tgt_mols))
+    # #! Note...
+    # print("\n#src_mols = ", len(src_mols))
+    # print("#tgt_mols = ", len(tgt_mols))
 
     ranges = []
     for mol in src_mols:
@@ -134,17 +132,20 @@ def reaction(args):
     src_features = molecule(src_mols, src_len, reactant_mask, ranges)
     tgt_features = molecule(tgt_mols, src_len) #! length that is passed is src_len
 
-    #! Note...
-    print("\n#src_features = ", len(src_features))
-    print("#tgt_features = ", len(tgt_features)) #! both are of same length
+    # #! Note...
+    # print("\n#src_features = ", len(src_features))
+    # print("#tgt_features = ", len(tgt_features)) #! both are of same length
 
-    #! Note...
-    print("\n#src_features.element = ", src_features["element"])
-    print("#tgt_features.element = ", tgt_features["element"])
+    # #! Note...
+    # print("\n#src_features.element = ", src_features["element"])
+    # print("#tgt_features.element = ", tgt_features["element"])
 
     # #! Note...
     # print("\n#src_features.bond = ", src_features["bond"])
     # print("#tgt_features.bond = ", tgt_features["bond"])
+    #! Bond = matrix src_len X MAX_BONDS, showing atomic num of j-th bond of i-th atom.
+    #! The atomic numbers of covalent bond neighbour atoms are sorted and the rest of the
+    #! column elements (after all bonds are done) are lone pairs and self atomic num is filled
 
     if not (src_features and tgt_features):
         return None
@@ -161,8 +162,8 @@ def reaction(args):
         dec_cnt = 0
         diff = [0 for _ in range(src_len)]
         for j in range(MAX_BONDS):
-            diff[tgt_bond[i][j]] += 1
-            diff[src_bond[i][j]] -= 1
+            diff[tgt_bond[i][j]] += 1 #! for i-th atom, diff of j-th bond in RHS atom increased
+            diff[src_bond[i][j]] -= 1 #! for i-th atom, diff of j-th bond in LHS atom decreased
         for j in range(src_len):
             if diff[j] > 0:
                 if inc_cnt + diff[j] >MAX_DIFF:
@@ -191,14 +192,14 @@ def process(name):
     with open(name + ".txt") as file:
         for i, line in enumerate(file):
 
-            # if i <= 3:
+            # if i == 0:
             #     continue #! Skip first
 
             rxn = line.split()[0].split('>>')
             src.append(rxn[0])
             tgt.append(rxn[1])
 
-            break # only one reaction #! Note..
+            # break # only one reaction #! Note..
 
     pool = ProcessPoolExecutor(10)
     dataset = []
@@ -208,13 +209,15 @@ def process(name):
         arg_list = [(src[idx], tgt[idx]) for idx in range(i*batch_size, upper)]
         result = pool.map(reaction, arg_list, chunksize= 64)
         result = list(result)
+
         for item in result:
             if not item is None:
+                #! each 'item' is a dictionary
                 dataset += [item]
 
     pool.shutdown()
-    exit()
 
+    #! dataset = list of single dicts corresponding to reactions
     with open(name +"_"+prefix+ '.pickle', 'wb') as file:
         pickle.dump(dataset, file)
     print("total %d, legal %d"%(len(src), len(dataset)))

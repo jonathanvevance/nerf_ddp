@@ -14,13 +14,15 @@ class TransformerDataset(Dataset):
         # (L, B, C)
         self.data = data # list of dict of tensors
         self.shuffle = if_shuffle
-        for feature_dict in data:
+
+        #! just to set the correct data types and torch Tensors..
+        for feature_dict in data: #! wasn't it a list of single dictionaries?
             for key in feature_dict:
                 tmp = torch.tensor(feature_dict[key])
                 if 'aroma' in key or 'mask' in key:
-                    feature_dict[key] = tmp.bool()
+                    feature_dict[key] = tmp.bool() #! convert these to bool
                 else:
-                    feature_dict[key] = tmp.long()
+                    feature_dict[key] = tmp.long() #! all others to long/numerical
 
     def __len__(self):
         return len(self.data)
