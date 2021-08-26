@@ -320,8 +320,6 @@ def load_data(args, name):
                              shuffle=(name == 'train'),
                              num_workers=args.num_workers, collate_fn = TransformerDataset.collate_fn)
 
-    #! Note...
-    exit()
     return data_loader
 
 

@@ -51,22 +51,22 @@ class MLP(nn.Module):
         self.conv3 = nn.Conv1d(dim, 4*dim, 1)
         self.conv4 = nn.Conv1d(4*dim, dim, 1)
         self.conv5 = nn.Conv1d(dim, dim, 1)
-        
+
     def forward(self, x):
         inter = self.conv1(x)
         inter = F.relu(inter)
         inter = self.conv2(inter)
         x = x + inter
-        
+
         inter = self.conv3(x)
         inter = F.relu(inter)
         inter = self.conv4(inter)
         x = x + inter
-        
+
         return self.conv5(x)
 
-    
-    
+
+
 class AtomEncoder(nn.Module):
     def __init__(self, ntoken, dim, dropout=0.1, rank=0):
         super().__init__()
@@ -78,53 +78,53 @@ class AtomEncoder(nn.Module):
         self.segment_embedding = nn.Embedding(30, dim)
         self.rank = rank
         self.mlp = MLP(dim)
-        
+
     def forward(self, element, bond, aroma, charge, segment, reactant_mask=None):
         '''
         element, long [b, l] element index
         bonds, long [b, l, MAX_BONDS]
         aroma, long [b, l]
         charge, long [b, l] +2 +1 0 -1 -2
-        
+
         returns [l, b, dim]
-        
+
         '''
         b, l = element.shape
         # basic information
-        element = element.transpose(1, 0) 
+        element = element.transpose(1, 0)
         element_embedding = self.element_embedding(element)
         embedding = element_embedding
         #[l, b, dim]
 
         position_embedding = self.position_embedding(l)
         embedding = embedding + position_embedding
-        
+
         aroma = aroma.transpose(1, 0).long()
         aroma_embedding = self.aroma_embedding(aroma)
         embedding = embedding + aroma_embedding
-        
+
         # additional information
-        charge = charge.transpose(1, 0) + 6  
+        charge = charge.transpose(1, 0) + 6
         charge_embedding = self.charge_embedding(charge)
         embedding = embedding + charge_embedding
-        
-        segment = segment.transpose(1, 0) 
+
+        segment = segment.transpose(1, 0)
         segment_embedding = self.segment_embedding(segment)
         embedding = embedding + segment_embedding
-        
+
         if not reactant_mask is None:
-            reactant_mask = reactant_mask.transpose(1, 0) 
+            reactant_mask = reactant_mask.transpose(1, 0)
             reactant_embedding = self.reactant_embedding(reactant_mask)
-            embedding = embedding + reactant_embedding  
-            
+            embedding = embedding + reactant_embedding
+
         message = self.mlp(embedding.permute(1, 2, 0)).permute(2, 0, 1)
         eye = torch.eye(l).to(self.rank)
         tmp = torch.index_select(eye, dim=0, index=bond.reshape(-1)).view(b, l, MAX_BONDS, l).sum(dim=2) # adjacenct matrix
         tmp = tmp*(1-eye) # remove self loops
         message = torch.einsum("lbd,bkl->kbd", message, tmp)
-        
+
         embedding = embedding + message
-        
+
         return embedding
 
 
@@ -134,7 +134,7 @@ class BondDecoder(nn.Module):
         self.inc_attention = MultiheadAttention(dim, MAX_DIFF)
         self.inc_q = nn.Conv1d(dim, dim, 1)
         self.inc_k = nn.Conv1d(dim, dim, 1)
-        
+
         self.dec_attention = MultiheadAttention(dim, MAX_DIFF)
         self.dec_q = nn.Conv1d(dim, dim, 1)
         self.dec_k = nn.Conv1d(dim, dim, 1)
@@ -148,7 +148,7 @@ class BondDecoder(nn.Module):
         """
         l, b, dim = molecule_embedding.shape
         molecule_embedding = molecule_embedding.permute(1, 2, 0)  # to [b, dim, l]
-        
+
         q, k, v = self.inc_q(molecule_embedding), self.inc_k(molecule_embedding), molecule_embedding
         q, k, v = q.permute(2, 0, 1), k.permute(2, 0, 1), v.permute(2, 0, 1)  # to [l, b, c]
         _, inc = self.inc_attention(q, k, v, key_padding_mask=src_mask)
@@ -156,16 +156,16 @@ class BondDecoder(nn.Module):
         q, k, v = self.dec_q(molecule_embedding), self.dec_k(molecule_embedding), molecule_embedding
         q, k, v = q.permute(2, 0, 1), k.permute(2, 0, 1), v.permute(2, 0, 1)  # to [l, b, c]
         _, dec = self.dec_attention(q, k, v, key_padding_mask=src_mask)
-        
+
         pad_mask = 1 - src_mask.float()
         # [B, L], 0 if padding
         pad_mask = torch.einsum("bl,bk->blk", pad_mask, pad_mask)
         diff = (inc - dec)*MAX_DIFF*pad_mask
-        
+
         eye = torch.eye(src_mask.shape[1]).to(self.rank)
         src_weight = torch.index_select(eye, dim=0, index=src_bond.reshape(-1)).view(b, l, MAX_BONDS, l).sum(dim=2)* pad_mask
-        pred_weight = src_weight + diff      
-        
+        pred_weight = src_weight + diff
+
         if tgt_bond is None: # inference
             # [b, l, l]
             bonds = []
@@ -175,12 +175,12 @@ class BondDecoder(nn.Module):
                 pred_weight -= torch.index_select(eye, dim=0, index=bonds[-1].reshape(-1)).view(b, l, l)
             pred_bond = torch.stack(bonds, dim =2)
             return pred_bond
-            
+
         else: # training
             tgt_mask = tgt_mask.float() # 1 iff masked
             or_mask = 1 - torch.einsum("bl,bk->blk", tgt_mask, tgt_mask) # notice that this doesn't mask the edges between target and side products
             and_mask = torch.einsum("bl,bk->blk", 1-tgt_mask, 1-tgt_mask)
-        
+
             tgt_weight = torch.index_select(eye, dim=0, index=tgt_bond.reshape(-1)).view(b, l, MAX_BONDS, l).sum(dim=2)*and_mask
             error = pred_weight - tgt_weight
             error = error*error*pad_mask*or_mask
