@@ -108,6 +108,15 @@ def reaction(args):
                 reactant_mask[j] = True
                 break
 
+    #! Checking if there are repeated molecules in src or tgt
+    print()
+    if len(set(src_mols)) < len(src_mols):
+        print("REPEATED MOLS FOUND IN SRC")
+        exit()
+    if len(set(tgt.split("."))) < len(tgt.split(".")):
+        print("REPEATED MOLS FOUND IN TGT")
+        exit()
+
     # #! Note...
     # print("\nreactant_mask = ", reactant_mask) #! reactants that take part in rxn
 
@@ -201,21 +210,28 @@ def process(name):
 
             # break # only one reaction #! Note..
 
-    pool = ProcessPoolExecutor(10)
+    # pool = ProcessPoolExecutor(10) #! Skip this
     dataset = []
     batch_size = 2048
     for i in trange(len(src)//batch_size+1):
         upper = min((i+1)*batch_size, len(src))
         arg_list = [(src[idx], tgt[idx]) for idx in range(i*batch_size, upper)]
-        result = pool.map(reaction, arg_list, chunksize= 64)
-        result = list(result)
+        # result = pool.map(reaction, arg_list, chunksize= 64) #! Skip this
+        # result = list(result)
 
-        for item in result:
+        # for item in result:
+        #     if not item is None:
+        #         #! each 'item' is a dictionary
+        #         dataset += [item]
+
+        for args in arg_list:
+            item = reaction(args)
             if not item is None:
                 #! each 'item' is a dictionary
                 dataset += [item]
 
-    pool.shutdown()
+    # pool.shutdown() #! Skip this
+    exit()
 
     #! dataset = list of single dicts corresponding to reactions
     with open(name +"_"+prefix+ '.pickle', 'wb') as file:
