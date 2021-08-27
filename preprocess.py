@@ -34,7 +34,7 @@ def molecule(mols, src_len, reactant_mask = None, ranges = None):
 
     for molid, mol in enumerate(mols):
         for atom in mol.GetAtoms(): #! Note.. each atom has a different idx
-            idx = atom.GetAtomMapNum()-1
+            idx = atom.GetAtomMapNum()-1 #! atom idxes are 1-indexed in USPTO-MIT
 
             segment[idx] = molid
             element[idx] = atom.GetAtomicNum()
@@ -64,6 +64,13 @@ def molecule(mols, src_len, reactant_mask = None, ranges = None):
             while cnt < MAX_BONDS:
                 bonds[idx][cnt] = idx #! IMPORTANT = for others cnt values till MAX_BONDS, put lone pairs.
                 cnt += 1
+
+    #! testing if any atom (IN TGT) has zero bonds (all zeros, not even all bonds with itself)...
+    for row in bonds:
+        if sum(row) == 0:
+            print("ATOM WITH NO BOND FOUND....")
+            if reactant_mask is None:
+                exit()
 
     features = {'element':element, 'bond':bonds, 'charge':charge, 'aroma':aroma, 'mask':mask, 'segment':segment, 'reactant': reactant}
     return features
