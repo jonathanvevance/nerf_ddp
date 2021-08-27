@@ -60,7 +60,7 @@ def molecule(mols, src_len, reactant_mask = None, ranges = None):
                     aroma[idx] = 1
             tmp = bonds[idx][0:cnt]
             tmp.sort()
-            bonds[idx][0:cnt] = tmp #! sort the atom idxes (for consistency because this is a graph)
+            bonds[idx][0:cnt] = tmp #! sort the atom idxes
             while cnt < MAX_BONDS:
                 bonds[idx][cnt] = idx #! IMPORTANT = for others cnt values till MAX_BONDS, put lone pairs.
                 cnt += 1
