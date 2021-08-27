@@ -171,16 +171,6 @@ class BondDecoder(nn.Module):
 
         eye = torch.eye(src_mask.shape[1]).to(self.rank)
         src_weight = torch.index_select(eye, dim=0, index=src_bond.reshape(-1)).view(b, l, MAX_BONDS, l).sum(dim=2)* pad_mask
-
-        #! Note..
-        print("     ", l, b)
-        print(pad_mask.shape)
-        print(src_bond.shape)
-        print(torch.index_select(eye, dim=0, index=src_bond.reshape(-1)).shape)
-        print(torch.index_select(eye, dim=0, index=src_bond.reshape(-1)).view(b, l, MAX_BONDS, l).shape)
-        print(src_weight.shape)
-        exit()
-
         pred_weight = src_weight + diff #! Predicted E matrix == N x (atoms_in_batch) x (atoms_in_batch)
 
         #! Note...
