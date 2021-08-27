@@ -30,16 +30,13 @@ src_bonds = torch.Tensor(src_bonds).int().view(1, len(src_bonds), len(src_bonds[
 #! RHS = N2 (O2 missing)
 #! N-0, N-1, O-2, O-3
 tgt_bonds = [
-    # [1, 1, 1, 0, 0, 0],
-    # [0, 0, 0, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1],
     [3, 3, 2, 2, 2, 2],
     [2, 2, 3, 3, 3, 3],
 ]
 N = len(tgt_bonds) # no of atoms
-# tgt_mask = torch.Tensor([0, 0, 1, 1]).view(1, N) # 1 iff masked
-tgt_mask = torch.Tensor([1, 1, 0, 0]).view(1, N) # 1 iff masked
+tgt_mask = torch.Tensor([0, 0, 1, 1]).view(1, N) # 1 iff masked
 
 
 tgt_bonds = torch.Tensor(tgt_bonds).int().view(1, len(tgt_bonds), len(tgt_bonds[0]))
@@ -54,11 +51,13 @@ print()
 
 predEp = torch.Tensor([[
     [0., 0., 0., 0.],
-    [0., 0., 0., 0.],
-    [0., 0., 0., 0.],
+    [0., 55., 0., 0.],
+    [0., 0., 100., 0.],
     [0., 0., 0., 0.]
 ]])
 
 error = Ep - predEp
 error = error*error*pad_mask*or_mask
 print(error)
+
+#! Observation = MSE loss is only derived from eij's that exist in target E (atoms that exist in RHS also)
