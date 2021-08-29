@@ -116,13 +116,13 @@ def reaction(args):
                 break
 
     #! Checking if there are repeated molecules in src or tgt
-    print()
-    if len(set(src_mols)) < len(src_mols):
-        print("REPEATED MOLS FOUND IN SRC")
-        exit()
-    if len(set(tgt.split("."))) < len(tgt.split(".")):
-        print("REPEATED MOLS FOUND IN TGT")
-        exit()
+    # print()
+    # if len(set(src_mols)) < len(src_mols):
+    #     print("REPEATED MOLS FOUND IN SRC")
+    #     exit()
+    # if len(set(tgt.split("."))) < len(tgt.split(".")):
+    #     print("REPEATED MOLS FOUND IN TGT")
+    #     exit()
 
     # #! Note...
     # print("\nreactant_mask = ", reactant_mask) #! reactants that take part in rxn
