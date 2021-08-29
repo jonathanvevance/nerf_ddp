@@ -124,7 +124,7 @@ class AtomEncoder(nn.Module):
         tmp = tmp*(1-eye) # remove self loops
         message = torch.einsum("lbd,bkl->kbd", message, tmp)
 
-        embedding = embedding + message #! Finally... - so this step does not take any edge information
+        embedding = embedding + message
 
         return embedding
 
