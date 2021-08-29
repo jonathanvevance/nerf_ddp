@@ -12,7 +12,7 @@ import os
 class MoleculeEncoder(nn.Module):
     def __init__(self, ntoken, dim, nhead, nlayer, dropout, rank):
         super().__init__()
-        self.atom_encoder = AtomEncoder(ntoken, dim, dropout=dropout, rank=rank)
+        self.atom_encoder = AtomEncoder(ntoken, dim, dropout=dropout, rank=rank) #! contains message passing
         layer = TransformerEncoderLayer(dim, nhead, dim, dropout)
         self.transformer_encoder = TransformerEncoder(layer, nlayer)
         # multihead attention assumes [len, batch, dim]
