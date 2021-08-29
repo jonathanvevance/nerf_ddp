@@ -36,6 +36,9 @@ def molecule(mols, src_len, reactant_mask = None, ranges = None):
         for atom in mol.GetAtoms(): #! Note.. each atom has a different idx
             idx = atom.GetAtomMapNum()-1 #! atom idxes are 1-indexed in USPTO-MIT
 
+            #! VERY IMPORTANT -
+            #! the order of atoms (important for transformer depends on the mapping in the dataset.
+
             segment[idx] = molid
             element[idx] = atom.GetAtomicNum()
             charge[idx] = atom.GetFormalCharge()
