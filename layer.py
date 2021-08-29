@@ -71,6 +71,8 @@ class AtomEncoder(nn.Module):
     def __init__(self, ntoken, dim, dropout=0.1, rank=0):
         super().__init__()
         self.position_embedding = PositionalEncoding(dim, dropout=dropout)
+        #! SEQUENCE of atoms is important for this positional encoding (NLP)
+        #! Thus, they are not considering it to be a graph, but a sequence of atoms.
         self.element_embedding = nn.Embedding(ntoken, dim)
         self.charge_embedding = nn.Embedding(13, dim) #[-6, +6]
         self.aroma_embedding = nn.Embedding(2, dim)
@@ -122,6 +124,9 @@ class AtomEncoder(nn.Module):
         eye = torch.eye(l).to(self.rank)
         tmp = torch.index_select(eye, dim=0, index=bond.reshape(-1)).view(b, l, MAX_BONDS, l).sum(dim=2) # adjacenct matrix
         tmp = tmp*(1-eye) # remove self loops
+        #! Printing adjacency matrix (is it 0-1 ?)
+        print(tmp)
+        exit()
         message = torch.einsum("lbd,bkl->kbd", message, tmp) #! l is gone => summed over l dimension (atoms)
 
         embedding = embedding + message
