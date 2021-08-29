@@ -38,6 +38,7 @@ def molecule(mols, src_len, reactant_mask = None, ranges = None):
 
             #! VERY IMPORTANT -
             #! the order of atoms (important for transformer depends on the mapping in the dataset.
+            #! So it is upto the dataset annotators to map closeby atoms with closeby atom indices.
 
             segment[idx] = molid
             element[idx] = atom.GetAtomicNum()
