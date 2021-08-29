@@ -88,7 +88,12 @@ class MoleculeDecoder(nn.Module):
             latent = self.latent_head(latent)
             src = src + latent.expand(l, b, dim)
 
+        #! Checking input and output shapes of self.transformer_encoder
+        # print("Transf-enc input shape =", src.shape)
         encoder_output = self.transformer_encoder(src, src_key_padding_mask=src_mask)
+        # print("Transf-enc output shape =", encoder_output.shape)
+        # exit()
+
         eps = 1e-6
         result = self.bond_decoder(encoder_output, src_bond, src_mask, tgt_bond, tgt_mask)
 

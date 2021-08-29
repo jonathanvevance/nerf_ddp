@@ -70,11 +70,11 @@ def molecule(mols, src_len, reactant_mask = None, ranges = None):
                 cnt += 1
 
     #! testing if any atom (IN TGT) has zero bonds (all zeros, not even all bonds with itself)...
-    for row in bonds:
-        if sum(row) == 0:
-            print("ATOM WITH NO BOND FOUND....")
-            if reactant_mask is None:
-                exit()
+    # for row in bonds:
+    #     if sum(row) == 0:
+    #         print("\nATOM WITH NO BOND FOUND....")
+    #         if reactant_mask is None:
+    #             exit()
 
     features = {'element':element, 'bond':bonds, 'charge':charge, 'aroma':aroma, 'mask':mask, 'segment':segment, 'reactant': reactant}
     return features
@@ -110,6 +110,7 @@ def reaction(args):
     # #! Note...
     # print("#src_atoms = ", src_atoms)
     # print("#tgt_atoms = ", tgt_atoms) #! len(tgt_atoms) = tgt_len
+    assert(len(tgt_atoms) <= len(src_atoms))
 
     reactant_mask = [False for i in src_mols]
     for j, item in enumerate(src_mols):
