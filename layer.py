@@ -120,6 +120,11 @@ class AtomEncoder(nn.Module):
             reactant_embedding = self.reactant_embedding(reactant_mask)
             embedding = embedding + reactant_embedding
 
+        #! printing shape of embedding...
+        print(embedding.shape)
+        print(embedding.permute(1,2,0).shape)
+        print(self.mlp(embedding.permute(1,2,0)).shape)
+        print(self.mlp(embedding.permute(1,2,0)).permute(2,0,1).shape)
         message = self.mlp(embedding.permute(1, 2, 0)).permute(2, 0, 1) #! (1,2,0) then (2,0,1) we get the same order back
         eye = torch.eye(l).to(self.rank)
         tmp = torch.index_select(eye, dim=0, index=bond.reshape(-1)).view(b, l, MAX_BONDS, l).sum(dim=2) # adjacenct matrix
