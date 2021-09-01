@@ -46,22 +46,25 @@ class PositionalEncoding(nn.Module):
 class MLP(nn.Module):
     def __init__(self, dim):
         super().__init__()
+        #! Conv1d(in_channels, out_channels, kernel_size)
         self.conv1 = nn.Conv1d(dim, 4*dim, 1)
         self.conv2 = nn.Conv1d(4*dim, dim, 1)
         self.conv3 = nn.Conv1d(dim, 4*dim, 1)
         self.conv4 = nn.Conv1d(4*dim, dim, 1)
         self.conv5 = nn.Conv1d(dim, dim, 1)
 
+        #! Note, all kernel size = 1, so no interaction across atoms.
+
     def forward(self, x):
         inter = self.conv1(x)
         inter = F.relu(inter)
         inter = self.conv2(inter)
-        x = x + inter
+        x = x + inter #! Residual connection
 
         inter = self.conv3(x)
         inter = F.relu(inter)
         inter = self.conv4(inter)
-        x = x + inter
+        x = x + inter #! Residual connection
 
         return self.conv5(x)
 
@@ -121,18 +124,27 @@ class AtomEncoder(nn.Module):
             embedding = embedding + reactant_embedding
 
         #! printing shape of embedding...
-        print(embedding.shape)
-        print(embedding.permute(1,2,0).shape)
-        print(self.mlp(embedding.permute(1,2,0)).shape)
-        print(self.mlp(embedding.permute(1,2,0)).permute(2,0,1).shape)
-        message = self.mlp(embedding.permute(1, 2, 0)).permute(2, 0, 1) #! (1,2,0) then (2,0,1) we get the same order back
+        # print(embedding.shape)
+        # print(embedding.permute(1,2,0).shape)
+        # print(self.mlp(embedding.permute(1,2,0)).shape)
+        # print(self.mlp(embedding.permute(1,2,0)).permute(2,0,1).shape)
+
+        message = self.mlp(embedding.permute(1, 2, 0)).permute(2, 0, 1)
+        #! mlp is a simple 'ATOM-WISE' feature extractor - no across atom interaction here..
+        #! (1,2,0) then (2,0,1) we get the same order back...
+
         eye = torch.eye(l).to(self.rank)
-        tmp = torch.index_select(eye, dim=0, index=bond.reshape(-1)).view(b, l, MAX_BONDS, l).sum(dim=2) # adjacenct matrix
-        tmp = tmp*(1-eye) # remove self loops
-        #! Printing adjacency matrix (is it 0-1 ?)
+        tmp = torch.index_select(eye, dim=0, index=bond.reshape(-1)).view(b, l, MAX_BONDS, l).sum(dim=2) # adjacency matrix
+        tmp = tmp*(1-eye) # remove self loops 
+        #! (in this implementation, we are using previously stored self value using simple addition)
+        #! Hence, we remove self loops here (self loops allowed -> Neighb(u) includes u.
+
+        #! Printing adjacency matrix (is it 0-1? A: yes)
         print(tmp)
-        exit()
+        # exit()
+
         message = torch.einsum("lbd,bkl->kbd", message, tmp) #! l is gone => summed over l dimension (atoms)
+        #! GCN - f(Hⁱ, A) = σ(A. Hⁱ. Wⁱ) - here, instead of HW, they are doing a conv1d with kernel size=1...
 
         embedding = embedding + message
 
