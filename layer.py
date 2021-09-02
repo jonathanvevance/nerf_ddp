@@ -145,6 +145,7 @@ class AtomEncoder(nn.Module):
 
         message = torch.einsum("lbd,bkl->kbd", message, tmp) #! l is gone => summed over l dimension (atoms)
         #! GCN - f(Hⁱ, A) = σ(A. Hⁱ. Wⁱ) - here, instead of HW, they are doing a conv1d with kernel size=1...
+        #! Why no activation function here?
 
         embedding = embedding + message
 
