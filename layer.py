@@ -140,7 +140,7 @@ class AtomEncoder(nn.Module):
         #! Hence, we remove self loops here (self loops allowed -> Neighb(u) includes u.
 
         #! Printing adjacency matrix (is it 0-1? A: yes)
-        print(tmp)
+        # print(tmp)
         # exit()
 
         message = torch.einsum("lbd,bkl->kbd", message, tmp) #! l is gone => summed over l dimension (atoms)
@@ -221,8 +221,8 @@ class BondDecoder(nn.Module):
             loss = error.sum(dim=(1, 2))
 
             #! Note...
-            print("\n Dim of Ep", tgt_weight.shape)
-            print("\ntarget Ep = ", tgt_weight)
-            exit()
+            # print("\n Dim of Ep", tgt_weight.shape)
+            # print("\ntarget Ep = ", tgt_weight)
+            # exit()
 
             return {'bond_loss':loss}

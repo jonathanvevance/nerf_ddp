@@ -242,8 +242,9 @@ def process(name):
                 #! each 'item' is a dictionary
                 dataset += [item]
 
+    print(len(dataset))
     # pool.shutdown() #! Skip this
-    exit()
+    return
 
     #! dataset = list of single dicts corresponding to reactions
     with open(name +"_"+prefix+ '.pickle', 'wb') as file:
@@ -255,6 +256,6 @@ if __name__ =='__main__':
     lg = RDLogger.logger()
     lg.setLevel(RDLogger.CRITICAL)
     RDLogger.DisableLog('rdApp.info')
-    # process("data/valid")
-    # process("data/test")
+    process("data/valid")
+    process("data/test")
     process("data/train")
