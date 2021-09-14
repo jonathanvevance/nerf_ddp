@@ -1,3 +1,7 @@
+
+From supplementary material of "Non-Autoregressive Electron Redistribution Modeling for Reaction Prediction" (ICML 2021)
+-------------------------------------------------------------------------------------------------------------------
+
 Code for our paper "Non-Autoregressive Electron Redistribution Modeling for Reaction Prediction" (ICML 2021)
 
 This repository contains a legacy version of our implementation, which we used to produce the results in our paper.
