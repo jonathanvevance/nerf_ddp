@@ -6,3 +6,4 @@ CKPT
 data
 log
 *.pickle
+/kube_files/*.txt
