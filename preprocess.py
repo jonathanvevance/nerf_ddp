@@ -244,7 +244,7 @@ def process(name):
 
     print(len(dataset))
     # pool.shutdown() #! Skip this
-    return
+    # return
 
     #! dataset = list of single dicts corresponding to reactions
     with open(name +"_"+prefix+ '.pickle', 'wb') as file:
