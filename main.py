@@ -288,7 +288,7 @@ class Trainer(object):
                     flag = True
                     for item in tgts[j]:
                         if not item in pred_smiles[j]:
-                            flag = False
+                            flag = False #! Did we predict ALL targt compounds?
                     if flag:
                         true_cnt += 1
                     if pred_valid[j]:
@@ -334,10 +334,10 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     args = {
         'seed': 0, 'local_rank': 0, 'name': 'tmp',
-        'save_path': './save', 'world_size': 1, 'train': True,
+        'save_path': './save', 'world_size': 1, 'train': False,
         'prefix': 'inc4', 'num_workers': 0, 'vae': True, 'dim': 256,
         'epochs': 1, 'dropout': 0.1, 'batch_size': 32, 'depth': 6,
-        'lr': 0.0001, 'checkpoint': None, 'save': True, 'eval': True,
+        'lr': 0.0001, 'checkpoint': ['tmp/epoch-0-loss-100.0'], 'save': False, 'eval': False,
         'test': True, 'beta': 0.01, 'temperature': [1,2,3], #! check correct tempt values
     }
 
