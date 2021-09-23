@@ -72,7 +72,8 @@ class Trainer(object):
                     state_dict[key] = checkpoint['model_state_dict'][key]
         for key in state_dict:
             state_dict[key] = state_dict[key]/len(self.args.checkpoint)
-        self.model.module.load_state_dict(state_dict)
+        # self.model.module.load_state_dict(state_dict) #! with multiple GPUs
+        self.model.load_state_dict(state_dict) #! If only one GPU
         if self.dataloader_tr is not None:
             self._optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.epoch = checkpoint['epoch']
@@ -83,7 +84,7 @@ class Trainer(object):
         torch.save({
             'epoch': self.epoch,
             'step': self.step,
-            # 'model_state_dict': self.model.module.state_dict(), #! with multiple GPU
+            # 'model_state_dict': self.model.module.state_dict(), #! with multiple GPUs
             'model_state_dict': self.model.state_dict(), #! If only one GPU
             'optimizer_state_dict': self._optimizer.state_dict(),
         }, args.save_path + 'epoch-' + str(self.epoch) + '-loss-' + str(np.float(self.epoch_loss)))
