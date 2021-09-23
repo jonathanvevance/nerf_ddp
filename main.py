@@ -83,7 +83,8 @@ class Trainer(object):
         torch.save({
             'epoch': self.epoch,
             'step': self.step,
-            'model_state_dict': self.model.module.state_dict(),
+            # 'model_state_dict': self.model.module.state_dict(), #! with multiple GPU
+            'model_state_dict': self.model.state_dict(), #! If only one GPU
             'optimizer_state_dict': self._optimizer.state_dict(),
         }, args.save_path + 'epoch-' + str(self.epoch) + '-loss-' + str(np.float(self.epoch_loss)))
 
@@ -335,7 +336,7 @@ if __name__ == '__main__':
         'seed': 0, 'local_rank': 0, 'name': 'tmp',
         'save_path': './save', 'world_size': 1, 'train': True,
         'prefix': 'inc4', 'num_workers': 0, 'vae': True, 'dim': 256,
-        'epochs': 100, 'dropout': 0.1, 'batch_size': 32, 'depth': 6,
+        'epochs': 1, 'dropout': 0.1, 'batch_size': 32, 'depth': 6,
         'lr': 0.0001, 'checkpoint': None, 'save': True, 'eval': True,
         'test': True, 'beta': 0.01, 'temperature': [1,2,3], #! check correct tempt values
     }

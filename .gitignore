@@ -7,3 +7,4 @@ data
 log
 *.pickle
 /kube_files/*.txt
+/save
