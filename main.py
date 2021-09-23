@@ -337,7 +337,7 @@ if __name__ == '__main__':
         'save_path': './save', 'world_size': 1, 'train': False,
         'prefix': 'inc4', 'num_workers': 0, 'vae': True, 'dim': 256,
         'epochs': 1, 'dropout': 0.1, 'batch_size': 32, 'depth': 6,
-        'lr': 0.0001, 'checkpoint': ['tmp/epoch-0-loss-100.0'], 'save': False, 'eval': False,
+        'lr': 0.0001, 'checkpoint': ['epoch-0-loss-100.0'], 'save': False, 'eval': False,
         'test': True, 'beta': 0.01, 'temperature': [1,2,3], #! check correct tempt values
     }
 
