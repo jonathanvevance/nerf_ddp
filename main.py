@@ -275,6 +275,7 @@ class Trainer(object):
                 result = pool.map(result2mol, arg_list, chunksize= 64)
                 result = list(result)
                 tgts = [item[1].split(".") for item in result] #  _, tgt_s, tgt_valid
+                #! item[1] = SMILES string of reaction; tgts = list of target/RHS SMILES compounds
 
                 output_dict = self.model('sample', batch_gpu, temperature)
                 pred_aroma, pred_charge = output_dict['aroma'].cpu(), output_dict['charge'].cpu()
@@ -284,6 +285,9 @@ class Trainer(object):
                 result = list(result)
                 pred_smiles = [item[1].split(".") for item in result] #  _, tgt_s, tgt_valid
                 pred_valid = [item[2] for item in result] #  _, tgt_s, tgt_valid
+                #! pred_smiles = list of predicted target/RHS SMILES compounds
+                #! pred_valid  = True/False mask of whether the SMILES string is a valid compound
+
                 for j in range(b):
                     # iterate over the batch
                     flag = True
@@ -335,11 +339,11 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     args = {
         'seed': 0, 'local_rank': 0, 'name': 'tmp',
-        'save_path': './save', 'world_size': 1, 'train': False,
+        'save_path': './save', 'world_size': 1, 'train': True,
         'prefix': 'inc4', 'num_workers': 0, 'vae': True, 'dim': 256,
-        'epochs': 1, 'dropout': 0.1, 'batch_size': 32, 'depth': 6,
-        'lr': 0.0001, 'checkpoint': ['epoch-0-loss-100.0'], 'save': False, 'eval': False,
-        'test': True, 'beta': 0.01, 'temperature': [1,2,3], #! check correct tempt values
+        'epochs': 100, 'dropout': 0.1, 'batch_size': 32, 'depth': 6,
+        'lr': 0.0001, 'checkpoint': None, 'save': True, 'eval': False,
+        'test': False, 'beta': 0.01, 'temperature': [1,2,3], #! check correct tempt values
     }
 
     class dotdict(dict):
