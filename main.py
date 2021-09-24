@@ -279,7 +279,8 @@ class Trainer(object):
                 src_aroma, src_charge = batch['src_aroma'].bool().long(), batch['src_charge']
 
                 arg_list = [(element[i], tgt_mask[i], tgt_bond[i], tgt_aroma[i], tgt_charge[i], None) for i in range(b)]
-                result = pool.map(result2mol, arg_list, chunksize= 64)
+                # result = pool.map(result2mol, arg_list, chunksize= 64)
+                result = map(result2mol, arg_list) #! Normal processing (no multi processing)
                 result = list(result)
                 tgts = [item[1].split(".") for item in result] #  _, tgt_s, tgt_valid
                 #! item[1] = SMILES string of reaction; tgts = list of target/RHS SMILES compounds (list of lists)
@@ -288,7 +289,8 @@ class Trainer(object):
                 pred_aroma, pred_charge = output_dict['aroma'].cpu(), output_dict['charge'].cpu()
                 pred_bond = output_dict['bond'].cpu()
                 arg_list = [(element[j], src_mask[j], pred_bond[j], pred_aroma[j], pred_charge[j], None) for j in range(b)]
-                result = pool.map(result2mol, arg_list, chunksize= 64)
+                # result = pool.map(result2mol, arg_list, chunksize= 64)
+                result = map(result2mol, arg_list) #! Normal processing (no multi processing)
                 result = list(result)
                 pred_smiles = [item[1].split(".") for item in result] #  _, tgt_s, tgt_valid
                 pred_valid = [item[2] for item in result] #  _, tgt_s, tgt_valid
@@ -306,6 +308,8 @@ class Trainer(object):
 
                         #! if flag: then set this reaction as predicted, at this temperature
                         predicted_rxns.append(True)
+                    else:
+                        predicted_rxns.append(False)
 
                     if pred_valid[j]:
                         pred.append(pred_smiles[j]) #! pred = list of lists of compounds for each rxn
