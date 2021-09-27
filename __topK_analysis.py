@@ -25,23 +25,13 @@ for k in range(1, TOP_K+1):
         valid_preds = 0
         for tempt_dict in tempt_dicts:
 
-            try:
-                if tempt_dict["pred"][i] is not None:
-                    valid_preds += 1
-            except:
-                print("1")
-                print(len(tempt_dict["pred"]))
-                exit()
+            if tempt_dict["pred"][i] is not None:
+                valid_preds += 1
 
             if valid_preds > k: break
 
-            try:
-                if tempt_dict["predicted_rxns"][i]:
-                    acc += 1
-                    break
-            except:
-                print("2")
-                print(len(tempt_dict["predicted_rxns"]))
-                exit()
+            if tempt_dict["predicted_rxns"][i]:
+                acc += 1
+                break
 
     print("TOP", k, "accuracy =", acc / n_reactions)
