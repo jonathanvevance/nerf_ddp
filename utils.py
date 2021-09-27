@@ -13,7 +13,7 @@ def mol2array(mol):
     array = np.array(img)[:, :, 0:3]
     return array
 
-def check(smile):
+def check(smile): #! is the LARGEST predicted molecule valid?
     smile = smile.split('.')
     smile.sort(key = len)
     try:

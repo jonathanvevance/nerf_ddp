@@ -249,21 +249,28 @@ class Trainer(object):
             return 0
 
     def test(self, temperature):
+
+        #! For top-K analysis:
+        #! pred[j] is not None, checks for valid prediction at this temperature
+        #! predicted_rxns[j] is True, checks if this rxn was correctly predicted at this tempt
+        predicted_rxns = []
+
         true_cnt = 0
         cnt = 0
         valid_cnt = 0
         pool = ProcessPoolExecutor(10)
-        test_result = {'temperature':temperature}
+        test_result = {'temperature':temperature} #! for each tempt value
         pred  = []
         with torch.no_grad():
             self.model.eval()
             pbar = tqdm(self.dataloader_te)
+            #! Note: no re-shufflings bcz for test data loader, shuffle=False and same seed 0 is always used
             for batch in iter(pbar):
                 batch_gpu = {}
                 for key in batch:
                     batch_gpu[key] = batch[key].to(self.rank)
                 b, l = batch['element'].shape
-                cnt += b
+                cnt += b #! cnt = total number of rxns
                 tgts = []
                 element = batch['element']
                 src_bond, tgt_bond = batch['src_bond'], batch['tgt_bond']
@@ -272,41 +279,53 @@ class Trainer(object):
                 src_aroma, src_charge = batch['src_aroma'].bool().long(), batch['src_charge']
 
                 arg_list = [(element[i], tgt_mask[i], tgt_bond[i], tgt_aroma[i], tgt_charge[i], None) for i in range(b)]
-                result = pool.map(result2mol, arg_list, chunksize= 64)
+                # result = pool.map(result2mol, arg_list, chunksize= 64)
+                result = map(result2mol, arg_list) #! Normal processing (no multi processing)
                 result = list(result)
                 tgts = [item[1].split(".") for item in result] #  _, tgt_s, tgt_valid
-                #! item[1] = SMILES string of reaction; tgts = list of target/RHS SMILES compounds
+                #! item[1] = SMILES string of reaction; tgts = list of target/RHS SMILES compounds (list of lists)
 
                 output_dict = self.model('sample', batch_gpu, temperature)
                 pred_aroma, pred_charge = output_dict['aroma'].cpu(), output_dict['charge'].cpu()
                 pred_bond = output_dict['bond'].cpu()
                 arg_list = [(element[j], src_mask[j], pred_bond[j], pred_aroma[j], pred_charge[j], None) for j in range(b)]
-                result = pool.map(result2mol, arg_list, chunksize= 64)
+                # result = pool.map(result2mol, arg_list, chunksize= 64)
+                result = map(result2mol, arg_list) #! Normal processing (no multi processing)
                 result = list(result)
                 pred_smiles = [item[1].split(".") for item in result] #  _, tgt_s, tgt_valid
                 pred_valid = [item[2] for item in result] #  _, tgt_s, tgt_valid
-                #! pred_smiles = list of predicted target/RHS SMILES compounds
-                #! pred_valid  = True/False mask of whether the SMILES string is a valid compound
+                #! pred_smiles = list of predicted target/RHS SMILES compounds (list of lists)
+                #! pred_valid  = True/False mask of whether the SMILES string is a valid compound (list)
 
                 for j in range(b):
                     # iterate over the batch
                     flag = True
                     for item in tgts[j]:
                         if not item in pred_smiles[j]:
-                            flag = False #! Did we predict ALL targt compounds?
+                            flag = False #! Did we predict ALL target compounds?
                     if flag:
-                        true_cnt += 1
+                        true_cnt += 1 #! true_cnt = # rxn where we predicted all compounds
+
+                        #! if flag: then set this reaction as predicted, at this temperature
+                        predicted_rxns.append(True)
+                    else:
+                        predicted_rxns.append(False)
+
                     if pred_valid[j]:
-                        pred.append(pred_smiles[j])
+                        pred.append(pred_smiles[j]) #! pred = list of lists of compounds for each rxn
                         valid_cnt += 1
+                        #! valid_cnt = # rxn where we predicted valid compounds (only LARGEST compounds checked)
                     else:
                         pred.append(None)
-
 
         test_result['acc'] = true_cnt/cnt
         test_result['valid'] = valid_cnt/cnt
         test_result['pred'] = pred
         test_result['ckpt'] = self.args.checkpoint
+
+        #! For top-K analysis:
+        test_result['predicted_rxns'] = predicted_rxns
+
         print("acc: %f, valid: %f"%(test_result['acc'], test_result['valid']))
         with open("results/"+str(temperature)+ '_' + str(self.args.seed)+'.pickle', 'wb') as file:
             pickle.dump(test_result, file)
@@ -323,7 +342,7 @@ def load_data(args, name):
 
     data_loader = DataLoader(full_dataset,
                              batch_size=args.batch_size,
-                             shuffle=(name == 'train'),
+                             shuffle=(name == 'train'), #! no shuffling for test data loader
                              num_workers=args.num_workers, collate_fn = TransformerDataset.collate_fn)
 
     return data_loader
