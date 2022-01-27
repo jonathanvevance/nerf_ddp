@@ -16,5 +16,6 @@ cd /scratch/scratch6/jonathanvevance/projects/nerf_ddp/
 
 # Run the code. The -u option is used here to use unbuffered writes
 # so that output is piped to the file as and when it is produced
-# python -u ./main.py &>> /scratch/scratch6/jonathanvevance/projects/nerf_ddp/kube_files/main_logs.txt
-python -u ./
+python -u ./main.py &>> /scratch/scratch6/jonathanvevance/projects/nerf_ddp/kube_files/main_logs.txt 
+python -u ./__topk_analysis.py &>> /scratch/scratch6/jonathanvevance/projects/nerf_ddp/kube_files/main_logs.txt 
+
