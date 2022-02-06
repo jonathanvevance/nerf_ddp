@@ -102,8 +102,9 @@ class AtomEncoder(nn.Module):
         embedding = element_embedding
         #[l, b, dim]
 
-        position_embedding = self.position_embedding(l)
-        embedding = embedding + position_embedding
+         #! REMOVED POSITIONAL EMBEDDING
+        # position_embedding = self.position_embedding(l)
+        # embedding = embedding + position_embedding
 
         aroma = aroma.transpose(1, 0).long()
         aroma_embedding = self.aroma_embedding(aroma)
