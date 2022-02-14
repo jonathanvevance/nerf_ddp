@@ -358,10 +358,10 @@ if __name__ == '__main__':
     # args = parser.parse_args()
     args = {
         'seed': 0, 'local_rank': 0, 'name': 'tmp',
-        'save_path': './save', 'world_size': 1, 'train': False,
+        'save_path': './save', 'world_size': 1, 'train': True,
         'prefix': 'inc4', 'num_workers': 0, 'vae': True, 'dim': 256,
         'epochs': 100, 'dropout': 0.1, 'batch_size': 32, 'depth': 6,
-        'lr': 0.0001, 'checkpoint': ["epoch-99-loss-0.3470629119693915"], 'save': False, 'eval': True,
+        'lr': 0.0001, 'checkpoint': [], 'save': True, 'eval': True,
         'test': True, 'beta': 0.01, 'temperature': [x/10 for x in range(1, 11)], #! check correct tempt values
     }
 
